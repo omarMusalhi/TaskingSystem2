@@ -12,8 +12,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using TaskingSystem2.Data;
 using TaskingSystem2.Models;
 using TaskingSystem2.Utilities;
 
@@ -27,18 +29,22 @@ namespace TaskingSystem2.Areas.Identity.Pages.Account
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager <IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
+        
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender, RoleManager<IdentityRole> roleManager)
+            IEmailSender emailSender, RoleManager<IdentityRole> roleManager
+            , ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
             _roleManager = roleManager;
+            _context = context;
         }
 
         [BindProperty]
@@ -100,12 +106,17 @@ namespace TaskingSystem2.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
+            ViewData["DirectorateId"] = new SelectList(_context.Directorate, "Id", "Name");
+            ViewData["DepartmentId"] = new SelectList(_context.Department, "Id", "Name");
+            ViewData["SectionId"] = new SelectList(_context.Section, "Id", "Name");
+
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
